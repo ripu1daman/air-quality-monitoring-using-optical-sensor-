@@ -1,1 +1,61 @@
 # air-quality-monitoring-using-optical-sensor-
+#include <LiquidCrystal.h>
+
+// Initialize the LCD library
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+
+// Define the dust sensor variables
+const int dustSensorPin = A0;
+const int ledPowerPin = 13;
+
+// Variables for dust sensor measurements
+int samplingTime = 280;
+int deltaTime = 40;
+int sleepTime = 9680;
+float voMeasured = 0;
+float calcVoltage = 0;
+float dustDensity = 0;
+
+void setup() {
+  // Initialize the LCD display
+  lcd.begin(16, 2);
+  lcd.setCursor(0, 0);
+  lcd.print("Dust Density:");
+
+  // Initialize the sensor and LED
+  pinMode(ledPowerPin, OUTPUT);
+  digitalWrite(ledPowerPin, LOW);
+
+  // Initialize the serial communication
+  Serial.begin(9600);
+}
+void loop() {
+  // Turn off the sensor and give some time for stabilization
+  digitalWrite(ledPowerPin, LOW);
+  delayMicroseconds(samplingTime);
+
+  // Read the sensor value
+  voMeasured = analogRead(dustSensorPin);
+
+  // Turn on the sensor and delay
+  delayMicroseconds(deltaTime);
+  digitalWrite(ledPowerPin, HIGH);
+  delayMicroseconds(sleepTime);
+
+  // Calculate dust density
+  calcVoltage = voMeasured * (5.0 / 1024.0);
+  dustDensity = 0.17 * calcVoltage - 0.1;
+
+  // Display the dust density on the LCD
+  lcd.setCursor(0, 1);
+  lcd.print("Dust: ");
+  lcd.print(dustDensity, 1); // Display with one decimal place
+  lcd.print(" mg/m^3");
+
+  // Display the dust density on the Serial Monitor
+  Serial.print("Dust Density: ");
+  Serial.print(dustDensity, 1);
+  Serial.println(" mg/m^3");
+
+  delay(1000); // Delay for 1 second before the next measurement
+}
